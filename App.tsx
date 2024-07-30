@@ -1,64 +1,93 @@
 import { StatusBar } from "expo-status-bar";
 import { Button, Image, Text, TextInput, View } from "react-native";
 import { useForm, Controller } from "react-hook-form";
+import axios from "axios";
+import { useState } from "react";
+import { userSchema } from "./src/validations/userZod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+interface UserData {
+  Email: string;
+  Password: string;
+}
 
 export default function App() {
+  const [data, setData] = useState<string | null>(null);
   const {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm({
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-    },
+  } = useForm<UserData>({
+    resolver: zodResolver(userSchema),
   });
-  const onSubmit = (data: any) => console.log(data);
+
+  const onSubmit = async (formData: UserData) => {
+    try {
+      const response = await axios.post(
+        "http://54.157.249.179/api/auth/login",
+        formData,
+      );
+      setData(response.data.token);
+      console.log(response.data);
+    } catch (error: any) {
+      console.error(
+        "Error:",
+        error.response ? error.response.data : error.message,
+      );
+    }
+  };
+
   return (
-    <View className="flex-col items-center justify-center flex-1 space-x-4">
-      <View className="flex flex-row items-center space-x-4">
-        <StatusBar style="auto" />
+    <View className="items-center justify-center flex-1 p-5 bg-white">
+      <StatusBar style="auto" />
+      <View className="flex flex-row items-center mb-5 space-x-4">
         <Image
           source={require("./assets/images/65671cd627825dadd6139e7b_analytics-color.webp")}
           className="w-24 h-24"
         />
-        <View className="">
-          <Text>Chayan</Text>
-          <Text>Technology</Text>
+        <View>
+          <Text className="text-lg font-bold">Chayan Technology</Text>
+          <Text>{data}</Text>
         </View>
       </View>
-      <View className="flex flex-col mt-5">
+      <View className="w-full">
         <Controller
           control={control}
-          rules={{
-            required: true,
-          }}
+          name="Email"
           render={({ field: { onChange, onBlur, value } }) => (
             <TextInput
-              placeholder="First name"
+              placeholder="Email"
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
+              className="p-2 mb-2 border rounded"
+              keyboardType="email-address"
+              autoCapitalize="none"
             />
           )}
-          name="firstName"
         />
-        {errors.firstName && <Text>This is required.</Text>}
+        {errors.Email && (
+          <Text className="mb-2 text-red-500">{errors.Email.message}</Text>
+        )}
+
         <Controller
           control={control}
-          rules={{
-            maxLength: 100,
-          }}
+          name="Password"
           render={({ field: { onChange, onBlur, value } }) => (
             <TextInput
-              placeholder="Last name"
+              placeholder="Password"
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
+              className="p-2 mb-2 border rounded"
+              secureTextEntry
             />
           )}
-          name="lastName"
         />
+        {errors.Password && (
+          <Text className="mb-2 text-red-500">{errors.Password.message}</Text>
+        )}
+
         <Button title="Submit" onPress={handleSubmit(onSubmit)} />
       </View>
     </View>
