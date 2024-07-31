@@ -47,7 +47,7 @@ export default function Home() {
   };
 
   return (
-    <View className="items-center justify-center flex-1 p-5 bg-white">
+    <View className="flex justify-center h-full items--center">
       <StatusBar style="auto" />
       <View className="flex flex-row items-center mb-5 space-x-4">
         <Image
