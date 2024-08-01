@@ -3,10 +3,12 @@ import { StatusBar } from "expo-status-bar";
 import { Button, Image, Text, TextInput, View } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { userSchema } from "../validations/userZod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import { useNavigation } from "expo-router";
 
 interface UserData {
   Email: string;
@@ -16,7 +18,7 @@ interface UserData {
 const login = async (formData: UserData): Promise<string> => {
   const response = await axios.post(
     "http://54.157.249.179/api/auth/login",
-    formData,
+    formData
   );
   return response.data.token;
 };
@@ -31,11 +33,20 @@ export default function Home() {
     resolver: zodResolver(userSchema),
   });
 
+  const router = useRouter();
+
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
+
   const mutation = useMutation<string, Error, UserData>({
     mutationFn: login,
     onSuccess: (data: string) => {
       setData(data);
       console.log(data);
+      router.replace("/(tabs)/");
     },
     onError: (error: Error) => {
       console.error("Error:", error.message);
@@ -47,7 +58,7 @@ export default function Home() {
   };
 
   return (
-    <View className="flex justify-center h-full items--center">
+    <View className="flex items-center justify-center h-full px-12 bg-white">
       <StatusBar style="auto" />
       <View className="flex flex-row items-center mb-5 space-x-4">
         <Image
