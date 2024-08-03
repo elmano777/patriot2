@@ -6,21 +6,30 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { userSchema } from "../validations/userZod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useNavigation } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface UserData {
   Email: string;
   Password: string;
 }
 
-const login = async (formData: UserData): Promise<string> => {
-  const response = await axios.post(
+interface UserResponse {
+  id: number;
+  Nombre: string;
+  Email: string;
+  Role: string;
+  token: string;
+}
+
+const login = async (UserData: UserData): Promise<UserResponse> => {
+  const response = await axios.post<UserResponse>(
     "http://54.157.249.179/api/auth/login",
-    formData
+    UserData
   );
-  return response.data.token;
+  return response.data;
 };
 
 export default function Home() {
@@ -41,12 +50,17 @@ export default function Home() {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  const mutation = useMutation<string, Error, UserData>({
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation<UserResponse, Error, UserData>({
     mutationFn: login,
-    onSuccess: (data: string) => {
-      setData(data);
+    onSuccess: async (data) => {
+      setData(data.token);
       console.log(data);
       router.replace("/(tabs)/");
+      await AsyncStorage.setItem("token", data.token);
+      await AsyncStorage.setItem("userData", JSON.stringify(data));
+      queryClient.setQueryData(["user"], data);
     },
     onError: (error: Error) => {
       console.error("Error:", error.message);

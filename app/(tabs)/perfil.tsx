@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
-import Hom2 from "../../src/screens/asd"; 
+import UserProfile from "../../src/screens/profile";
 
 export default function Perfil() {
-  return <Hom2 />;
+  return <UserProfile />;
 }
