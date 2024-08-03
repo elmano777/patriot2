@@ -2,6 +2,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { useRouter } from "expo-router";
 
 interface UserData {
   Email: string;
@@ -26,6 +27,7 @@ const login = async (userData: UserData): Promise<UserResponse> => {
 
 export const useAuth = () => {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const loginMutation = useMutation<UserResponse, Error, UserData>({
     mutationFn: login,
@@ -36,7 +38,7 @@ export const useAuth = () => {
     },
   });
 
-  const { data: user } = useQuery<UserResponse | null>({
+  const { data: user, refetch } = useQuery<UserResponse | null>({
     queryKey: ["user"],
     queryFn: async () => {
       const token = await AsyncStorage.getItem("token");
@@ -50,11 +52,14 @@ export const useAuth = () => {
     await AsyncStorage.removeItem("token");
     await AsyncStorage.removeItem("userData");
     queryClient.setQueryData(["user"], null);
+    router.replace("/"); // Redirige al usuario a la pantalla principal
   };
 
   return {
     user,
     login: loginMutation.mutate,
     logout,
+    isLoading: loginMutation.isPending,
+    refetchUser: refetch,
   };
 };
